@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ globals.report_name }}</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin-top: 2cm;
+            margin-bottom: 1.5cm;
+            margin-left: 1.5cm;
+            margin-right: 1.5cm;
+            @top-left {
+                content: url("{{ 'thermoelectrica_logo.png' | local_image }}");
+                vertical-align: middle;
+            }
+            @top-right {
+                content: "ПРОТОКОЛ №{{ params.protocol_number }} {{ params.plant_name }} от {{ params.period_end | format_date }}";
+                font-family: 'Times New Roman', serif;
+                font-size: 10pt;
+                font-weight: bold;
+            }
+            @bottom-right {
+                content: counter(page);
+                font-family: 'Times New Roman', serif;
+                font-size: 10pt;
+            }
+            @bottom-left {
+                content: "* согласно РД 34.45-51.300-97 и типовой инструкции по применению термоиндикаторов";
+                font-family: 'Times New Roman', serif;
+                font-size: 10pt;
+            }
+        }
+        @page :first {
+            margin-top: 1.5cm;
+            @top-right {
+                content: none;
+            }
+            @top-left {
+                content: none;
+            }
+        }
+        body {
+            font-family: 'Times New Roman', serif;
+            font-size: 11pt;
+            line-height: 1.3;
+        }
+        h1 {
+            text-align: center;
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        h2 {
+            text-align: center;
+            font-size: 12pt;
+            font-weight: bold;
+            margin: 20px 0 10px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        td, th {
+            border: 1px solid black;
+            padding: 6px;
+            vertical-align: top;
+            font-size: 9pt;
+        }
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+            font-size: 10pt;
+        }
+        tbody tr {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        .group-header-row {
+            page-break-before: always;
+        }
+        .group-header-row td {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+            font-size: 12pt;
+        }
+        .eqipment-name-column {
+            text-align: center;
+            font-size: 11pt;
+        }
+        .data-column {
+            font-size: 9pt;
+        }
+        .debug-table {
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            font-size: 6pt;
+            width: 100%;
+        }
+        .debug-table td {
+            padding: 2px 4px;
+            border: 1px solid #ddd;
+            font-size: 6pt;
+        }
+        .debug-table th {
+            padding: 2px 4px;
+            background-color: #e0e0e0;
+            font-size: 6pt;
+            font-weight: bold;
+        }
+        .header-table {
+            border: none;
+            page-break-after: always;
+        }
+        .header-table td {
+            border: none;
+            padding: 12px;
+        }
+        .summary-table {
+            border: none;
+            page-break-after: always;
+            margin-top: 20px;
+        }
+        .summary-table td {
+            border: none;
+            padding: 4px 8px;
+            font-size: 10pt;
+        }
+        .summary-facility {
+            font-weight: bold;
+            padding-left: 0;
+        }
+        .summary-folder {
+            padding-left: 20px;
+        }
+        .summary-equipment {
+            padding-left: 40px;
+        }
+        .underline {
+            border-bottom: 1px solid black;
+        }
+        .signature-section {
+            page-break-before: always;
+        }
+        .signature-table {
+            border: none;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .signature-table td {
+            border: none;
+            text-align: center;
+        }
+        .signature-table .value-row td {
+            width: 33%;
+            vertical-align: bottom;
+            padding-top: 20px;
+            padding-bottom: 0px;
+        }
+        .signature-table .label-row td {
+            font-size: 8pt;
+            padding-top: 0px;
+        }
+        .image-container {
+            max-width: 100%;
+            margin: 5px 0;
+        }
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <h1>
+        Протокол теплового контроля контактов и контактных соединений с применением термоиндикаторов<br>
+        на {{ params.plant_name }}
+    </h1>
+    
+    <h2>
+        ПРОТОКОЛ №{{ params.protocol_number }} {{ params.plant_name }} от {{ params.period_end | format_date }}<br>
+        теплового контроля электрооборудования
+    </h2>
+
+    <table class="header-table">
+        <tr>
+            <td style="width: 30%; vertical-align: top;">
+                <strong>Перечень обследованных электроустановок</strong>
+            </td>
+            <td style="width: 70%;">
+                {% if queries.data %}
+                {% set equipment_types = queries.data | map(attribute='equipment_type_name') | unique | list %}
+                {% for eq_type in equipment_types %}
+                {{ eq_type }}<br>
+                {% endfor %}
+                {% if queries.inspection_summary %}
+                Количество контрольных точек: {{ queries.inspection_summary | sum(attribute='total_point_count') }}<br>
+                Количество ТИН: {{ queries.inspection_summary | sum(attribute='total_sticker_count') }}
+                {% else %}
+                Количество контрольных точек: {{ queries.data | length }}<br>
+                Количество ТИН: {{ queries.data | selectattr('is_sticker_present', 'equalto', true) | list | length }}
+                {% endif %}
+                {% else %}
+                Нет данных
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td style="vertical-align: top;">
+                <strong>Обследование провели (ФИО)</strong>
+            </td>
+            <td>
+                {% if queries.data %}
+                {% set inspectors = queries.data | map(attribute='full_name') | select | unique | list %}
+                {{ inspectors | join(', ') }}
+                {% else %}
+                Персонал, который провел осмотр
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td style="vertical-align: top;">
+                <strong>Даты осмотра:</strong>
+            </td>
+            <td>
+                {% if queries.inspection_dates %}
+                {% for date_row in queries.inspection_dates %}
+                {{ date_row.inspection_date | format_date }}{% if not loop.last %}, {% endif %}
+                {% endfor %}
+                {% else %}
+                {{ params.period_start | format_date }} — {{ params.period_end | format_date }}
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td style="vertical-align: top;">
+                <strong>Тепловизор (при наличии):</strong>
+            </td>
+            <td>Тип: {{ params.thermal_device_type }}<br>
+                Серийный номер № {{ params.thermal_device_serial }}<br>
+                Свидетельство о поверке № {{ params.thermal_device_certificate }} действительно до {{ params.thermal_device_certificate_valid_until | format_date }}</td>
+        </tr>
+    </table>
+
+    {% if queries.inspection_summary %}
+    <h2>Сводная информация по обследованию</h2>
+    <table class="summary-table">
+        {% set current_facility = namespace(name='') %}
+        {% for row in queries.inspection_summary %}
+            {# New facility #}
+            {% if row.facility_name != current_facility.name %}
+                {% set current_facility.name = row.facility_name %}
+                <tr>
+                    <td class="summary-facility" colspan="3">{{ row.facility_name }}</td>
+                </tr>
+            {% endif %}
+            
+            {# Folder row with counts #}
+            <tr>
+                <td class="summary-folder">{{ row.full_folder_name }}</td>
+                <td style="text-align: right; padding-right: 20px;">{{ row.total_point_count }}</td>
+                <td style="text-align: right; padding-right: 20px;">{{ row.total_sticker_count }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+
+    {% if queries.data %}
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 5%;">№</th>
+                <th style="width: 20%;">Диспетчерское наименование электрооборудования; узел</th>
+                <th style="width: 20%;">Фотография термоиндикатора и термограмма</th>
+                <th style="width: 55%;">Выявленный дефект</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% set current_group = namespace(criticality='', panel='') %}
+            {% for row in queries.data %}
+            {# Add group header when criticality or is_panel changes #}
+            {% if row.criticality != current_group.criticality or row.is_panel != current_group.panel %}
+            {% set current_group.criticality = row.criticality %}
+            {% set current_group.panel = row.is_panel %}
+            {% if row.criticality == 'CRITICAL' and row.is_panel == 'MOTOR' %}
+            {% set group_label = 'Критические дефекты двигателей' %}
+            {% elif row.criticality == 'CRITICAL' and row.is_panel == 'PANEL' %}
+            {% set group_label = 'Критические дефекты распределительных устройств' %}
+            {% elif row.criticality == 'EMERGENCY' and row.is_panel == 'MOTOR' %}
+            {% set group_label = 'Аварийные дефекты двигателей' %}
+            {% elif row.criticality == 'EMERGENCY' and row.is_panel == 'PANEL' %}
+            {% set group_label = 'Аварийные дефекты распределительных устройств' %}
+            {% elif row.criticality == 'DEVELOPING' and row.is_panel == 'MOTOR' %}
+            {% set group_label = 'Развивающиеся дефекты двигателей' %}
+            {% else %}
+            {% set group_label = 'Развивающиеся дефекты распределительных устройств' %}
+            {% endif %}
+            <tr class="group-header-row">
+                <td colspan="4">{{ group_label }}</td>
+            </tr>
+            {% endif %}
+            
+            <tr>
+                <td style="text-align: center;">{{ loop.index }}</td>
+                <td class="eqipment-name-column">
+                    {{ row.full_equipment_name | replace(' > ', '<br>') | safe }};<br><br>
+                    {{ row.defect_type_name }} * <br>
+                    {{ row.unit_name }}
+                </td>
+                <td>
+                    {% if row.visual_image_ids %}
+                        {% for image_id in row.visual_image_ids %}
+                        <div class="image-container">
+                            <img src="{{ image_id | image_url }}" alt="{{image_id}}">
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                    {% if row.thermal_image_ids %}
+                        {% for image_id in row.thermal_image_ids %}
+                        <div class="image-container">
+                            <img src="{{ image_id | image_url }}" alt="{{image_id}}">
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                    {% if not row.visual_image_ids and not row.thermal_image_ids %}
+                    <em>Изображения отсутствуют</em>
+                    {% endif %}
+                </td>
+                <td class="data-column">
+                    <strong>Результаты термоиндикаторного контроля:</strong><br>
+                    {% if row.is_sticker_present %}
+                    Термоиндикатор: L Mark {{ row.sticker_name }}<br>
+                    Температура, зафиксированная ТИН: <strong>{{ row.t_sticker }} °С</strong> (норма T<sub>пред. доп.</sub> ≤ {{ row.t_max }} °С)<br>
+                    {% else %}
+                    ТИН отсутствует<br>
+                    {% endif %}
+                    
+                    {% if row.is_test_ready %}
+                    <strong>Результаты тепловизионного контроля:</strong><br>
+                    {% if row.t_observed %}
+                    Зафиксированная тепловизором температура T<sub>набл</sub> = <strong>{{ "%.1f" | format(row.t_observed) }} °С</strong> (норма T<sub>пред. доп.</sub> ≤ <strong>{{ row.t_max }} °С</strong>)<br>
+                    {% endif %}
+                    {% if row.t_environment %}
+                    Температура окружающей среды T<sub>окр</sub> = <strong>{{ "%.1f" | format(row.t_environment) }} °С</strong><br>
+                    {% endif %}
+                    {% if row.t_similar_unit %}
+                    Температура идентичного узла T<sub>идент</sub> = <strong>{{ "%.1f" | format(row.t_similar_unit) }} °С</strong><br>
+                    {% endif %}
+                    {% if row.nominal_current %}
+                    Номинальный ток I<sub>ном</sub> = <strong>{{ row.nominal_current }} А</strong><br>
+                    {% endif %}
+                    {% if row.measured_current %}
+                    Рабочий ток нагрузки I<sub>раб</sub> = <strong>{{ row.measured_current }} А{% if row.nominal_current %}, ({{ "%.2f" | format(row.measured_current / row.nominal_current) }} I<sub>ном</sub>){% endif %}</strong><br>
+                    {% endif %}
+                    {% if row.t_observed and row.t_environment %}
+                    {% set delta_t = (row.t_observed - row.t_environment) | round(1) %}
+                    Превышение температуры ∆T<sub>прев</sub> = <strong>{{ "%.1f" | format(delta_t) }} °С</strong>{% if row.t_excess %} (норма ∆T<sub>пред. доп.</sub> <strong>≤ {{ row.t_excess }} °С</strong>){% endif %}<br>
+                    {% endif %}
+                    {% if row.load_factor_range == 'MEDIUM' and row.t_observed_excess_50 %}
+                    Превышение температуры при 50% нагрузки ∆T<sub>1/2 ном</sub> = <strong>{{ "%.1f" | format(row.t_observed_excess_50) }} °С</strong><br>
+                    {% elif row.load_factor_range == 'HIGH' and row.t_observed_excess_100 %}
+                    Превышение температуры при номинальном токе ∆T<sub>ном</sub> = <strong>{{ "%.1f" | format(row.t_observed_excess_100) }} °С</strong>{% if row.t_excess %} (норма ∆T<sub>пред. доп.</sub> <strong>≤ {{ row.t_excess }} °С</strong>){% endif %}<br>
+                    {% endif %}
+                    {% endif %}
+                    
+                    {% if (row.t_observed and row.t_max) or (row.t_sticker and row.t_max) %}
+                    <br>
+                    <strong>Вывод:</strong>
+                    {% if row.t_over_max_excess %}
+                    Превышение предельно допустимой температуры на <strong>{{ "%.1f" | format(row.t_over_max_excess) }} °С.</strong><br>
+                    <strong>Классификация дефекта:</strong>
+                    {% if row.criticality == 'CRITICAL' %}
+                    критический, незамедлительный вывод в ремонт
+                    {% elif row.criticality == 'EMERGENCY' %}
+                    аварийный, требуется вывод в ремонт
+                    {% elif row.criticality == 'DEVELOPING' %}
+                    развивающийся, требуется наблюдение
+                    {% else %}
+                    в пределах нормы
+                    {% endif %}
+                    {% else %}
+                    Температура в пределах нормы
+                    {% endif %}
+                    {% endif %}
+                    
+                    {% if params.debug %}
+                    <table class="debug-table">
+                        <tr>
+                            <th colspan="3">DEBUG INFO</th>
+                        </tr>
+                        <tr>
+                            <td><strong>t_sticker:</strong></td>
+                            <td>{{ row.t_sticker if row.t_sticker else 'N/A' }}</td>
+                            <td>Показания ТИН</td>
+                        </tr>
+                        <tr>
+                            <td><strong>t_environment:</strong></td>
+                            <td>{{ "%.2f" | format(row.t_environment) if row.t_environment else 'N/A' }}</td>
+                            <td>Температура окр. среды</td>
+                        </tr>
+                        <tr>
+                            <td><strong>t_similar_unit:</strong></td>
+                            <td>{{ "%.2f" | format(row.t_similar_unit) if row.t_similar_unit else 'N/A' }}</td>
+                            <td>Температура идентичного узла</td>
+                        </tr>
+                        <tr>
+                            <td><strong>t_observed:</strong></td>
+                            <td>{{ "%.2f" | format(row.t_observed) if row.t_observed else 'N/A' }}</td>
+                            <td>Температура, измеренная тепловизором</td>
+                        </tr>
+                        <tr>
+                            <td><strong>t_max:</strong></td>
+                            <td>{{ row.t_max if row.t_max else 'N/A' }}</td>
+                            <td>Макс. допустимая температура</td>
+                        </tr>
+                        <tr>
+                            <td><strong>t_excess:</strong></td>
+                            <td>{{ row.t_excess if row.t_excess else 'N/A' }}</td>
+                            <td>Макс. допустимое провышение температуры</td>
+                        </tr>
+                        <tr>
+                            <td><strong>measured_current:</strong></td>
+                            <td>{{ row.measured_current if row.measured_current else 'N/A' }}</td>
+                            <td>Измеренный ток</td>
+                        </tr>
+                        <tr>
+                            <td><strong>nominal_current:</strong></td>
+                            <td>{{ row.nominal_current if row.nominal_current else 'N/A' }}</td>
+                            <td>Номинальный ток</td>
+                        </tr>
+                        <tr>
+                            <td><strong>load_factor:</strong></td>
+                            <td>{{ "%.4f" | format(row.load_factor) if row.load_factor else 'N/A' }}</td>
+                            <td>Коэффициент нагрузки</td>
+                        </tr>
+                        <tr>
+                            <td><strong>load_factor_range:</strong></td>
+                            <td>{{ row.load_factor_range if row.load_factor_range else 'N/A' }}</td>
+                            <td>Диапазон нагрузки -L- 30% -M- 60% -H- 100% -O</td>
+                        </tr>
+                        <tr>
+                            <td><strong>t_observed_excess:</strong></td>
+                            <td>{{ "%.2f" | format(row.t_observed_excess) if row.t_observed_excess else 'N/A' }}</td>
+                            <td>Повышение температуры над окр. средой</td>
+                        </tr>
+                        <tr>
+                            <td><strong>t_observed_excess_50:</strong></td>
+                            <td>{{ "%.2f" | format(row.t_observed_excess_50) if row.t_observed_excess_50 else 'N/A' }}</td>
+                            <td>Расчетное повышение при 50% нагрузки</td>
+                        </tr>
+                        <tr>
+                            <td><strong>t_observed_excess_100:</strong></td>
+                            <td>{{ "%.2f" | format(row.t_observed_excess_100) if row.t_observed_excess_100 else 'N/A' }}</td>
+                            <td>Расчетное повышение при 100% нагрузки</td>
+                        </tr>
+                        <tr>
+                            <td><strong>criticality:</strong></td>
+                            <td>{{ row.criticality if row.criticality else 'N/A' }}</td>
+                            <td>Критичность дефекта</td>
+                        </tr>
+                        <tr>
+                            <td><strong>criticality_sort:</strong></td>
+                            <td>{{ row.criticality_sort if row.criticality_sort else 'N/A' }}</td>
+                            <td>Сортировка по критичности (1=CRITICAL, 2=EMERGENCY, 3=DEVELOPING)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>is_panel:</strong></td>
+                            <td>{{ row.is_panel if row.is_panel else 'N/A' }}</td>
+                            <td>Тип оборудования (PANEL/MOTOR)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>panel_sort:</strong></td>
+                            <td>{{ row.panel_sort if row.panel_sort else 'N/A' }}</td>
+                            <td>Сортировка по типу (1=PANEL, 2=MOTOR)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>t_over_max_excess:</strong></td>
+                            <td>{{ "%.2f" | format(row.t_over_max_excess) if row.t_over_max_excess else 'N/A' }}</td>
+                            <td>Превышение над допустимым повышением</td>
+                        </tr>
+                    </table>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p><em>Нет данных для отображения за указанный период.</em></p>
+    {% endif %}
+
+    <div class="signature-section">
+        <strong>Обследование провели:</strong><br>
+        {% if queries.data %}
+        {% set inspectors = queries.data | map(attribute='full_name') | select | unique | list %}
+        {% for inspector in inspectors %}
+        <table class="signature-table">
+            <tr class="value-row">
+                <td>Инженер тепловизионного контроля</td>
+                <td>_________________</td>
+                <td>{{ inspector }}</td>
+            </tr>
+            <tr class="label-row">
+                <td>(должность)</td>
+                <td>(подпись)</td>
+                <td>(ФИО)</td>
+            </tr>
+        </table>
+        {% endfor %}
+        {% else %}
+        <table class="signature-table">
+            <tr class="value-row">
+                <td>Инженер тепловизионного контроля</td>
+                <td>_________________</td>
+                <td>__________________________________</td>
+            </tr>
+            <tr class="label-row">
+                <td>(должность)</td>
+                <td>(подпись)</td>
+                <td>(ФИО)</td>
+            </tr>
+        </table>
+        {% endif %}
+        
+        <strong>Протокол составил:</strong><br>
+        <table class="signature-table">
+            <tr class="value-row">
+                <td>__________________________________</td>
+                <td>_________________</td>
+                <td>__________________________________</td>
+            </tr>
+            <tr class="label-row">
+                <td>(должность)</td>
+                <td>(подпись)</td>
+                <td>(ФИО)</td>
+            </tr>
+        </table>
+        
+        <strong>Протокол проверил:</strong><br>
+        <table class="signature-table">
+            <tr class="value-row">
+                <td>__________________________________</td>
+                <td>_________________</td>
+                <td>__________________________________</td>
+            </tr>
+            <tr class="label-row">
+                <td>(должность)</td>
+                <td>(подпись)</td>
+                <td>(ФИО)</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div style="margin-top: 30px; padding-top: 10px; border-top: 1px solid #ddd; color: #7f8c8d; font-size: 10pt;">
+        <p>Отчет сгенерирован: {{ globals.generated_at }} | Версия: {{ globals.version }}</p>
+    </div>
+</body>
+</html>

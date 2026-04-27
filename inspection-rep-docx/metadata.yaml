@@ -1,0 +1,30 @@
+name: "Протокол теплового контроля (DOCX)"
+description: "Протокол теплового контроля контактов и контактных соединений с применением термоиндикаторов (формат DOCX)"
+version: "1.0"
+format: "pandoc-docx"
+timeout: 120
+
+parameters:
+  - name: plant_name
+    type: string
+    required: true
+    description: "Станция"
+    enum_query: "plant_list.sql"
+  - name: period_start
+    type: date
+    required: true
+    description: "Начало периода осмотра"
+  - name: period_end
+    type: date
+    required: true
+    description: "Окончание периода осмотра"
+  - name: protocol_number
+    type: string
+    required: true
+    description: "Номер протокола"
+  - name: debug
+    type: boolean
+    required: false
+    description: "Показать отладочную информацию"
+    default: false
+

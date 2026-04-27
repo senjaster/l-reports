@@ -1,0 +1,55 @@
+name: "Протокол теплового контроля"
+description: "Протокол теплового контроля контактов и контактных соединений с применением термоиндикаторов"
+version: "1.0"
+format: "weasyprint"
+timeout: 120
+
+parameters:
+  - name: plant_name
+    type: string
+    required: true
+    description: "Станция"
+    enum_query: "plant_list.sql"
+  - name: period_start
+    type: date
+    required: true
+    description: "Начало периода осмотра"
+  - name: period_end
+    type: date
+    required: true
+    description: "Окончание периода осмотра"
+  - name: protocol_number
+    type: string
+    required: true
+    description: "Номер протокола"
+  - name: include_developing
+    type: boolean
+    required: false
+    description: "Включить развивающиеся дефекты в отчет"
+    default: false
+  - name: debug
+    type: boolean
+    required: false
+    description: "Показать отладочную информацию"
+    default: false
+  - name: thermal_device_type
+    type: string
+    required: false
+    description: "Тип и регистрационный номер тепловизора"
+    default: "FLIR E6 Рег.№ 79822-20"
+  - name: thermal_device_serial
+    type: string
+    required: false
+    description: "Серийный номер тепловизора"
+    default: "639095800"
+  - name: thermal_device_certificate
+    type: string
+    required: false
+    description: "Номер свидетельства о поверке"
+    default: "С-АКЗ/04-12-2025/486553148"
+  - name: thermal_device_certificate_valid_until
+    type: date
+    required: false
+    description: "Дата окончания действия свидетельства о поверке"
+    default: "2026-12-03"
+
