@@ -57,7 +57,7 @@ base_table AS (
         LEFT OUTER JOIN lesiv.inspector AS ins
             ON i.inspector_id = ins.id	
     WHERE
-        i.started_at BETWEEN :period_start AND :period_end
+        i.started_at BETWEEN :period_start AND cast(:period_end as timestamp) + interval '1 day'
         AND edv.plant_name = :plant_name
 ),
 adjusted_temperatures AS
