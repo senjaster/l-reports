@@ -1,7 +1,7 @@
 name: "Протокол теплового контроля (DOCX)"
 description: "Протокол теплового контроля контактов и контактных соединений с применением термоиндикаторов (формат DOCX)"
 version: "1.0"
-format: "pandoc-docx"
+format: "docxtpl"
 timeout: 120
 
 parameters:
