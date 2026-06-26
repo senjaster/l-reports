@@ -48,7 +48,7 @@ base_table AS (
             ON i.equipment_id = edv.id
         INNER JOIN lesiv.defect_type AS dt	
             ON s.defect_type_id = dt.id
-        INNER JOIN lesiv.sticker_type AS st
+        LEFT OUTER JOIN lesiv.sticker_type AS st
             ON s.sticker_type_id = st.id
         LEFT OUTER JOIN grouped_images AS vil
             ON s.id = vil.inspection_step_id AND vil.image_type = 'VISUAL'
