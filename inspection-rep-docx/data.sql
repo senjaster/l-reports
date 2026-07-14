@@ -12,8 +12,9 @@ base_table AS (
     SELECT 
         -- Столбец "Диспетчерское наименование электрооборудования; узел"
         edv.facility_name || ' > ' || edv.equipment_path AS full_equipment_name,
-        -- "Узел" это следующие два столбца:
+        -- "Узел" это следующие три столбца:
         dt.name AS defect_type_name,
+        dt.short_name AS defect_type_short_name,
         s.unit_name,
         -- Столбец "Фотография термоиндикатора и термограмма"
         vil.image_id AS visual_image_id,
@@ -26,6 +27,7 @@ base_table AS (
         s.t_environment,          -- Температура окружающей среды
         s.t_similar_unit,         -- Температура аналогичного узла
         s.t_observed,             -- Температура, зарегистрированная тепловизором
+        s.is_attention_required,  -- Необходимость внимания
         dt.t_max,                 -- Максимально допустимая температура для данного типа узла
         dt.t_excess,              -- Максимально допустимое превышение температуры над окр. средой.
         s.measured_current,       -- Измеренный ток
@@ -119,9 +121,8 @@ SELECT
 	*
 FROM criticality_calc
 WHERE criticality <> 'DEVELOPING'  -- Выводим только аварийные и критические
-ORDER BY 
+ORDER BY
 	criticality,
-	is_panel,
 	full_equipment_name,
 	defect_type_name,
 	unit_name

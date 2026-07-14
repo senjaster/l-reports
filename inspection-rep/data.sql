@@ -14,8 +14,9 @@ base_table AS (
     SELECT 
         -- Столбец "Диспетчерское наименование электрооборудования; узел"
         edv.facility_name || ' > ' || edv.equipment_path AS full_equipment_name,
-        -- "Узел" это следующие два столбца:
+        -- "Узел" это следующие три столбца:
         dt.name AS defect_type_name,
+        dt.short_name AS defect_type_short_name,
         s.unit_name,
         -- Столбец "Фотография термоиндикатора и термограмма"
         vil.image_ids AS visual_image_ids,
@@ -28,6 +29,7 @@ base_table AS (
         s.t_environment,          -- Температура окружающей среды
         s.t_similar_unit,         -- Температура аналогичного узла
         s.t_observed,             -- Температура, зарегистрированная тепловизором
+        s.is_attention_required,  -- Необходимость внимания
         dt.t_max,                 -- Максимально допустимая температура для данного типа узла
         dt.t_excess,              -- Максимально допустимое превышение температуры над окр. средой.
         s.measured_current,       -- Измеренный ток
@@ -57,7 +59,7 @@ base_table AS (
         LEFT OUTER JOIN lesiv.inspector AS ins
             ON i.inspector_id = ins.id	
     WHERE
-        i.started_at BETWEEN :period_start AND cast(:period_end as timestamp) + interval '1 day'
+        i.started_at BETWEEN :period_start AND cast(:period_end as timestamp) + interval '1 day' 
         AND edv.plant_name = :plant_name
 ),
 adjusted_temperatures AS
@@ -167,7 +169,6 @@ WHERE
     END
 ORDER BY
 	criticality_sort,
-	is_panel,
 	full_equipment_name,
 	defect_type_name,
 	unit_name
