@@ -1,1 +1,1 @@
-SELECT name FROM lesiv.plant WHERE not(is_deleted)
+SELECT name FROM lesiv.plant WHERE not(is_deleted) ORDER BY name ASC
